@@ -1,18 +1,26 @@
 import React from "react";
 import styled from "styled-components";
 
-export default function HoursBG() {
+export default function HoursBG({createEvent}) {
   const hours = [];
 
   for (let h = 0; h < 24; h++) {
     let hour_string = String(h);
-    hours.push(<Hour key={h} h={hour_string} />);
+    hours.push(
+      <Hour
+        key={h} 
+        h={hour_string} 
+        createEvent={createEvent}
+      />
+    );
   }
 
   return <BG>{hours}</BG>;
 }
 
-function Hour({ h }) {
+function Hour({ h,createEvent }) {
+  h = parseInt(h)
+  const h_24 = parseInt(h)
   var p = "AM";
   if (h === 24) {
     return (
@@ -30,16 +38,16 @@ function Hour({ h }) {
     <HourContainer>
       <MouseOvers>
         <MouseOverContainer>
-          <MouseOver />
+          <MouseOver onClick={()=>{createEvent(h_24)}}/>
         </MouseOverContainer>
         <MouseOverContainer>
-          <MouseOver />
+          <MouseOver onClick={()=>{createEvent(h_24+0.25)}}/>
         </MouseOverContainer>
         <MouseOverContainer>
-          <MouseOver />
+          <MouseOver onClick={()=>{createEvent(h_24+0.5)}}/>
         </MouseOverContainer>
         <MouseOverContainer>
-          <MouseOver />
+          <MouseOver onClick={()=>{createEvent(h_24+0.75)}}/>
         </MouseOverContainer>
       </MouseOvers>
       <TimeLine>

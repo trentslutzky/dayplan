@@ -6,35 +6,43 @@ import useMousePosition from "../util/useMousePosition";
 const hour_height = 200;
 
 const palette = [
-  "#F94144",
   "#F3722C",
   "#F8961E",
-  "#F9844A",
   "#F9C74F",
   "#90BE6D",
   "#43AA8B",
   "#4D908E",
-  "#577590",
   "#277DA1",
+  "#577590",
 ];
 
 export default function Events({ events, setEvents, topbar_height }) {
+  const [editing, setEditing] = useState(false)
   return (
-    <EventsContainer>
-      {events.map((e, i) => (
-        <Event
-          topbar_height={topbar_height}
-          events={events}
-          key={i}
-          event_id={e.id}
-          time={e.time}
-          duration={e.duration}
-          title={e.title}
-          color={palette[i]}
-          setEvents={setEvents}
-        />
-      ))}
-    </EventsContainer>
+    <>
+      <EventsContainer>
+        {editing && 
+          <ClickPreventer
+            onClick={()=>{setEditing(false)}}
+          />
+        }
+        {events.map((e, i) => (
+          <Event
+            topbar_height={topbar_height}
+            events={events}
+            key={i}
+            event_id={e.id}
+            time={e.time}
+            duration={e.duration}
+            title={e.title}
+            color={palette[i % palette.length]}
+            setEvents={setEvents}
+            editing={editing}
+            setEditing={setEditing}
+          />
+        ))}
+      </EventsContainer>
+    </>
   );
 }
 
@@ -47,8 +55,13 @@ function Event({
   color,
   setEvents,
   topbar_height,
+  editing,
+  setEditing
 }) {
   const [newDuration, setNewDuration] = useState(duration);
+
+  const [mytitle, setTitle] = useState(title);
+  const [titleEditing, setTitleEditing] = useState(false);
 
   const { y } = useMousePosition();
   const font_size = 20;
@@ -99,22 +112,29 @@ function Event({
         new_height = 42;
         return;
       }
+      if((time+(new_height/200))>=24){
+        return;
+      }
       setNewHeight(new_height);
       const newHeight_rounded =
         50 === 0 ? newHeight : Math.floor(newHeight / 50 + 0.5) * 50;
       setNewDuration(newHeight_rounded / 200);
       boxRef.current.style.height = (new_height - 8).toString() + "px";
     }
-  }, [resizing, newHeight, prev_height, prev_mouse, y]);
+  }, [resizing, newHeight, prev_height, prev_mouse, y, time]);
 
   useEffect(() => {
     if (moving) {
       const dif = y - prev_mouse;
-      const new_pos = prev_pos + dif;
+      var new_pos = prev_pos + dif;
+      if((new_pos/200)+(duration)>24){
+        new_pos = (24-duration)*200;
+      }
+      if(new_pos<1){new_pos=1;}
       setNewPos(new_pos);
       boxRef.current.style.top = `${new_pos + topbar_height}px`;
     }
-  }, [moving, prev_mouse, prev_pos, y, topbar_height]);
+  }, [moving, prev_mouse, prev_pos, y, topbar_height, duration]);
 
   useEffect(() => {
     window.addEventListener(
@@ -196,6 +216,20 @@ function Event({
     setMoving(true);
   }
 
+  function titleClick(){
+    if(editing){
+      return
+    }
+    setEditing(true)
+    setTitleEditing(true)
+  }
+
+  useEffect(()=>{
+    if(editing === false){
+      setTitleEditing(false)
+    }
+  },[editing])
+
   return (
     <EventBox
       ref={boxRef}
@@ -204,12 +238,22 @@ function Event({
       resizing={resizing}
     >
       <BoxContents>
-        <EventText onClick={()=>{console.log(title)}}>
+        {titleEditing &&
+          <TitleInput 
+            value={mytitle} 
+            onChange={(e)=>{setTitle(e.target.value)}}
+          />
+        }
+        <EventText onClick={()=>{console.log(mytitle)}}>
           <TimeText color={color} font_size={font_size}>
             {newDuration < 1 ? `${newDuration * 60}m` : `${newDuration}h`}
           </TimeText>
-          <EventTitle color={color} font_size={font_size}>
-            {title}
+          <EventTitle 
+            color={color} 
+            font_size={font_size}
+            onClick={titleClick}
+          >
+            {mytitle}
           </EventTitle>
         </EventText>
         <DragTop
@@ -250,6 +294,9 @@ const TimeText = styled.span`
 `;
 
 const EventTitle = styled.span`
+  z-index:5;
+  background:transparent;
+  border:none;
   font-weight: bold;
   color: ${(props) => props.color};
   font-size: ${(props) => props.font_size}px;
@@ -264,6 +311,7 @@ const EventText = styled.div`
 `;
 
 const BoxContents = styled.div`
+  position:relative;
   width: 100%;
   height: 100%;
   position: relative;
@@ -300,4 +348,22 @@ const EventsContainer = styled.div`
   background: #161616;
   top: 0;
   width: 100%;
+`;
+
+const TitleInput = styled.textarea`
+  background:#ffffff;
+  position:absolute;
+  height:100%;
+  width:100%;
+  color:black;
+  z-index: 10;
+  font-size:25px;
+  padding-left:10px;
+`;
+
+const ClickPreventer = styled.div`
+  position:absolute;
+  height:100%;
+  width:100%;
+  z-index:2;
 `;

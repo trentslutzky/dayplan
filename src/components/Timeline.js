@@ -2,16 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
 const palette = [
-  "#F94144",
   "#F3722C",
   "#F8961E",
-  "#F9844A",
   "#F9C74F",
   "#90BE6D",
   "#43AA8B",
   "#4D908E",
-  "#577590",
   "#277DA1",
+  "#577590",
 ];
 
 const day_ms = 24 * 60 * 60 * 1000;
@@ -52,7 +50,7 @@ export default function TimeLine({ events, click }) {
       {events.map((e, i) => (
         <EventBlock
           key={i}
-          color={palette[i]}
+          color={palette[i % palette.length]}
           duration={e.duration * (timelineWidth / 24)}
           time={e.time * (timelineWidth / 24)}
           onClick={() => {

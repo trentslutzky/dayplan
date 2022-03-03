@@ -7,7 +7,9 @@ import * as Scroll from "react-scroll";
 
 import TimeLine from "./components/Timeline";
 
-import CalendarView from "./CalendarView";
+import HoursBG from "./components/HoursBG";
+import TimeBar from "./components/TimeBar";
+import Events from "./components/Events.js";
 
 export default function App() {
   const [events, setEventsState] = useState(null);
@@ -16,18 +18,18 @@ export default function App() {
 
   let events_file_path = "./events.json";
 
-  const topbar_height = 150;
+  const topbar_height = 100;
 
   async function setEvents(e, write_file = false) {
-    setEventsState(e);
+    var new_events = [...e];
+    setEventsState(new_events);
     // if we aren't supposed to write to the events file,
     // return now
     if (!write_file) {
       return;
     }
     // write the new events object to the file
-    const file_written = await writeJSONToFile(events_file_path,{events:e})
-    console.log(file_written);
+    await writeJSONToFile(events_file_path,{events:e})
   }
 
   async function writeJSONToFile(path,data){
@@ -61,36 +63,45 @@ export default function App() {
       }
       setEvents(parsed_events)
     } catch (error) {
-      console.log(error)
       if(error === 2){
         console.log("invalid json file. Can't find events list.");
-        await writeJSONToFile(events_file_path,{events:[]});
+        setEvents([],true)
         return;
       }
-      if(typeof error == String){
+      if(typeof error == 'string'){
+        console.log('test')
         if(error.includes("No such file")){
           console.log("file does not exist.");
-          await writeJSONToFile(events_file_path,{events:[]})
+          setEvents([],true)
         }
         return
       }
       if (error instanceof SyntaxError) {
         console.log("invalid json file.");
-        await writeJSONToFile(events_file_path,{events:[]})
+        setEvents([],true)
         return
       }
     }
   }
 
-  async function saveEvents() {
-    const events_text = JSON.stringify(events);
+  async function createEvent(time){
+    console.log('create event',time);
+    var new_events = events.slice();
+    new_events.push({
+      id:events.length,
+      time:time,
+      duration:0.25,
+      title:'untitled',
+    });
+    console.log(new_events);
+    await setEvents(new_events,true);
   }
 
   useEffect(() => {
     if (events == null) {
       getEventsFromFile();
     }
-  }, [events]);
+  }, [events,getEventsFromFile]);
 
   function timelineEventClicked(time) {
     scroll.scrollTo(time * 200 - 200, {
@@ -104,11 +115,17 @@ export default function App() {
       <ListBox topbar_height={topbar_height}>
         <TimeLine events={events || []} click={timelineEventClicked} />
       </ListBox>
-      <CalendarView
-        events={events}
-        setEvents={setEvents}
-        topbar_height={topbar_height}
-      />
+      <CalendarView topbar_height={topbar_height}>
+        <HoursBG 
+          createEvent={createEvent}
+        />
+        <TimeBar />
+        <Events
+          events={events || []}
+          setEvents={setEvents}
+          topbar_height={topbar_height}
+        />
+      </CalendarView>
     </MainContainer>
   );
 }
@@ -127,4 +144,8 @@ const ListBox = styled.div`
   height: ${(props) => props.topbar_height}px;
   -webkit-box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.65);
   box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.65);
+`;
+
+const CalendarView = styled.div`
+  padding-top: ${props => props.topbar_height}px;
 `;
