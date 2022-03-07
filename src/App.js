@@ -9,7 +9,7 @@ import TimeLine from "./components/Timeline";
 
 import HoursBG from "./components/HoursBG";
 import TimeBar from "./components/TimeBar";
-import Events from "./components/Events.js";
+import Events from "./components/Events";
 
 export default function App() {
   const [events, setEventsState] = useState(null);
@@ -56,6 +56,7 @@ export default function App() {
       const parsed = JSON.parse(events_file);
       const parsed_events = parsed.events;
       if(Array.isArray(parsed_events) === false){
+        // eslint-disable-next-line
         throw 2;
       }
       if(parsed_events == null){
@@ -101,7 +102,7 @@ export default function App() {
     if (events == null) {
       getEventsFromFile();
     }
-  }, [events,getEventsFromFile]);
+  });
 
   function timelineEventClicked(time) {
     scroll.scrollTo(time * 200 - 200, {

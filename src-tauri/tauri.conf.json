@@ -54,8 +54,8 @@
     "windows": [
       {
         "title": "Day Plan",
-        "width": 800,
-        "height": 600,
+        "width": 500,
+        "height": 900,
         "resizable": true,
         "fullscreen": false
       }

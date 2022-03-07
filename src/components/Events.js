@@ -17,6 +17,7 @@ const palette = [
 ];
 
 export default function Events({ events, setEvents, topbar_height }) {
+
   const [editing, setEditing] = useState(false)
   return (
     <>
@@ -79,6 +80,8 @@ function Event({
 
   const [prev_pos, setPrevPos] = useState(time * hour_height);
   const [newPos, setNewPos] = useState(time * hour_height);
+
+  let inputRef = useRef(null);
 
   useEffect(() => {
     boxRef.current.style.height = `${duration * hour_height - 8}px`;
@@ -220,15 +223,32 @@ function Event({
     if(editing){
       return
     }
-    setEditing(true)
-    setTitleEditing(true)
+    inputRef.current.select();
+    setEditing(true);
+    setTitleEditing(true);
   }
 
   useEffect(()=>{
     if(editing === false){
-      setTitleEditing(false)
+      setTitleEditing(false);
     }
   },[editing])
+
+  useEffect(()=>{
+    if(titleEditing === false){
+      if(mytitle === ''){
+        setTitle('untitled');
+      }
+    }
+  },[titleEditing,mytitle])
+
+  function edit_title(e) {
+    setTitle(e.target.value.replace('\n',''));
+    if(e.target.value.includes('\n')){
+      setTitleEditing(false);
+      setEditing(false);
+    }
+  }
 
   return (
     <EventBox
@@ -238,13 +258,15 @@ function Event({
       resizing={resizing}
     >
       <BoxContents>
-        {titleEditing &&
-          <TitleInput 
-            value={mytitle} 
-            onChange={(e)=>{setTitle(e.target.value)}}
-          />
-        }
-        <EventText onClick={()=>{console.log(mytitle)}}>
+        <TitleInput 
+          style={{
+            visibility:titleEditing?"visible":"hidden",
+          }}
+          value={mytitle} 
+          onChange={edit_title}
+          ref={inputRef}
+        />
+        <EventText>
           <TimeText color={color} font_size={font_size}>
             {newDuration < 1 ? `${newDuration * 60}m` : `${newDuration}h`}
           </TimeText>
@@ -301,6 +323,7 @@ const EventTitle = styled.span`
   color: ${(props) => props.color};
   font-size: ${(props) => props.font_size}px;
   margin:5px;
+  cursor:text;
 `;
 
 const EventText = styled.div`
@@ -321,7 +344,6 @@ const BoxContents = styled.div`
 `;
 
 const EventBox = styled.div`
-  min-width: 300px;
   z-index: 3;
   overflow: hidden;
   display: flex;
@@ -351,7 +373,7 @@ const EventsContainer = styled.div`
 `;
 
 const TitleInput = styled.textarea`
-  background:#ffffff;
+  background:#808080;
   position:absolute;
   height:100%;
   width:100%;
